@@ -1,0 +1,363 @@
+PRAC1: LED WALA
+Shorter: GND
+Longer: 5
+
+import RPi.GPIO as GPIO
+import time
+x=1
+numTimes=int(input("Enter tottal number of times to blink"))
+speed=float(input("Enter length of each blink(seconds) : "))
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(5,GPIO.OUT)
+GPIO.setup(10,GPIO.OUT)
+GPIO.setup(19,GPIO.OUT)
+GPIO.setup(26,GPIO.OUT)
+GPIO.setup(29,GPIO.OUT)
+def Blink(numTimes,speed):
+for i in range(0,numTimes):
+	GPIO.output(5,True)
+	print ("Iteration ", (i+1))
+
+
+	GPIO.output(10,True)
+	print ("Iteration ", (i+1))
+
+
+	GPIO.output(19,True)
+	print ("Iteration ", (i+1))
+
+
+	GPIO.output(26,True)
+	print ("Iteration ", (i+1))
+
+
+	GPIO.output(29,True)
+	print ("Iteration ", (i+1))
+
+
+	GPIO.output(29,False)
+	print ("Iteration ", (i+1))
+	time.sleep(speed)
+
+	GPIO.output(26,False)
+	print ("Iteration ", (i+1))
+	time.sleep(speed)
+
+	GPIO.output(19,False)
+	print ("Iteration ", (i+1))
+	time.sleep(speed)
+
+	GPIO.output(10,False)
+	print ("Iteration ", (i+1))
+	time.sleep(speed)
+
+	GPIO.output(5,False)
+	print ("Iteration ", (i+1))
+	time.sleep(speed)
+ 
+Blink(numTimes,speed)
+print("Done") 	
+
+----------------------------------------------------------------------------------------------
+PRAC2:  Displaying Time over 4-Digit 7-Segment Display using Raspberry Pi.
+
+GND: 6
+VCC: 2
+DIO: 18
+CLK: 16
+
+Code: 
+import sys
+import time
+import datetime
+import RPi.GPIO as GPIO
+import tm1637
+#CLK -> GPIO23 (Pin 16)
+#Di0 -> GPIO24 (Pin 18)
+Display = tm1637.TM1637(23,24,tm1637.BRIGHT_TYPICAL)
+Display.Clear()
+Display.SetBrightnes(1)
+while(True):
+	now = datetime.datetime.now()
+	hour = now.hour
+	minute = now.minute
+	second = now.second
+	currenttime = [ int(hour / 10), hour % 10, int(minute / 10), minute % 10 ]
+	Display.Show(currenttime)
+	Display.ShowDoublepoint(second % 2)
+	time.sleep(1)
+----------------------------------------------------------------------------------------------
+PRAC3: Telegram
+
+sudo apt-get install python-pip
+sudo pip install telepot
+git clone https://github.com/salmanfarisvp/TelegramBot.git
+python telegrambot.py
+----------------------------------------------------------------------------------------------
+
+PRAC4:
+VCC: 2
+TX: 10
+GND: 6
+
+sudo nano /boot/config.txt
+###############
+dtparam=spi=on
+dtoverlay=pi3-disable-bt
+core_freq=250
+enable_uart=1
+force_turbo=1
+#############
+sudo systemctl stop serial-getty@ttyS0.service
+sudo systemctl disable serial-getty@ttyS0.service
+sudo systemctl enable serial-getty@ttyAMA0.service
+sudo apt-get install minicom
+sudo pip install pynmea2
+sudo cat /dev/ttyAMA0
+code:
+import time
+import serial
+
+import string
+import pynmea2
+import RPi.GPIO as gpio
+gpio.setmode(gpio.BCM)
+port = "/dev/ttyAMA0" # the serial port to which the pi is connected.
+#create a serial object
+ser = serial.Serial(port, baudrate = 9600, timeout = 0.5)
+while 1:
+	try:
+		data = ser.readline()
+	# 	print(data)
+	except:
+		print("loading") 
+	#wait for the serial port to churn out data
+	if data[0:6] == '$GPGGA': 
+		msg = pynmea2.parse(data)
+		print msg
+		time.sleep(2)
+For running go to the folder where you saved the file:
+first run the program (if this doesn't work)
+sudo cat /dev/tty/AMA0
+----------------------------------------------------------------------------------------------
+PRAC5:
+GND: 6
+VCC: 2
+IN1: 37
+
+import RPi.GPIO as GPIO
+from time import sleep
+relay_pin = 26
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(relay_pin, GPIO.OUT)
+GPIO.output(relay_pin, 1)
+try:
+	while True:
+	GPIO.output(relay_pin, 0)
+	sleep(5)
+	GPIO.output(relay_pin, 1)
+	sleep(5)
+except KeyboardInterrupt:
+	pass
+	GPIO.cleanup()
+----------------------------------------------------------------------------------------------
+PRAC6:
+sudo raspi-config
+Interface->Enable Legacy Camera
+sudo reboot
+Click on raspberry PI Logo->Preference->Interface enable ok
+CAPTURING IMAGE
+
+import picamera
+from time import sleep
+#create object for PiCamera class
+camera = picamera.PiCamera()
+#set resolution
+camera.resolution = (1024, 768)
+camera.brightness = 60
+camera.start_preview()
+#add text on image
+camera.annotate_text = 'Hi Pi User'
+sleep(5)
+#store image
+camera.capture('image1.jpeg')
+camera.stop_preview()
+
+
+VIDEO
+
+import picamera
+from time import sleep
+camera = picamera.PiCamera()
+camera.resolution = (640, 480)
+print()
+#start recording using pi camera
+camera.start_recording("/home/pi/demo.h264")
+#wait for video to record
+camera.wait_recording(20)
+#stop recording
+camera.stop_recording()
+camera.close()
+print("video recording stopped")
+
+To Play the video:
+Omxplayer demo.h264
+----------------------------------------------------------------------------------------------
+PRAC7:
+5V: 4
+GND: 6
+SDA: 3
+SCL: 5
+
+sudo raspi-config
+Select 5 Interfacing Options -> I2C -> yes.
+
+sudo apt-get update
+sudo apt-get install libusb-dev libpcsclite-dev i2c-tools
+
+cd ~
+wget https://github.com/nfc-tools/libnfc/releases/download/libnfc-1.8.0/libnfc-1.8.0.tar.bz2
+tar -xf libnfc-1.7.1.tar.bz2 
+
+cd libnfc-1.7.1
+./configure --prefix=/usr --sysconfdir=/etc
+make
+sudo make install 
+
+cd /etc
+sudo mkdir nfc
+sudo nano /etc/nfc/libnfc.conf
+
+# Allow device auto-detection (default: true)
+# Note: if this auto-detection is disabled, user has to set manually a device
+# configuration using file or environment variable
+allow_autoscan = true
+# Allow intrusive auto-detection (default: false)
+# Warning: intrusive auto-detection can seriously disturb other devices
+# This option is not recommended, user should prefer to add manually his device.
+allow_intrusive_scan = false
+# Set log level (default: error)
+# Valid log levels are (in order of verbosity): 0 (none), 1 (error), 2 (info), 3 (debug)
+# Note: if you compiled with --enable-debug option, the default log level is "debug"
+log_level = 1
+# Manually set default device (no default)
+# To set a default device, you must set both name and connstring for your device
+# Note: if autoscan is enabled, default device will be the first device available in 
+device list.
+#device.name = "_PN532_SPI"
+#device.connstring = "pn532_spi:/dev/spidev0.0:500000"
+device.name = "_PN532_I2c"
+device.connstring = "pn532_i2c:/dev/i2c-1"
+
+Run i2cdetect –yes 1 to check whether the I2C device is recognized.
+
+Run nfc-poll to scan the RFID tag and you can read information on the card
+
+----------------------------------------------------------------------------------------------
+PRAC8:
+GND: 6
+VCC: 4
+SDA: 3
+SCL: 5
+
+from signal import signal, SIGTERM, SIGHUP, pause
+from rpi_lcd import LCD
+
+lcd = LCD()
+def safe_exit(signum,frame):
+	exit(1)
+try:
+	signal(SIGTERM, safe_exit)
+	signal(SIGHUP, safe_exit)
+	lcd.text("Hello",1)
+	lcd.text("World",2)
+	pause()
+except keyboardInterrupt:
+	pass
+finally:
+	lcd.clear()
+
+if rpi_lcd not install
+sudo pip install rpi_lcd
+----------------------------------------------------------------------------------------------
+PRAC9:
+VDD: 1
+GND: 6
+SDA: 3
+SCL: 5
+
+Step 1: Enable Raspberry Pi I2C interface
+sudo raspi-config
+When the configuration panels open, select interface options, select I2C and click enable
+
+
+Step 2: Update the Raspberry pi
+The first thing I do before starting any project is updating the Pi. Through this, I am sure 
+every thing on the OS is up to date and I won’t experience compatibility issue with any 
+latest software I choose to install on the Pi. To do this, run below two commands:
+sudo apt-get update
+sudo apt-get upgrade
+
+
+Step 3: Install the Adafruit ADS1115 library for ADC
+
+cd ~
+then install the build-essentials by running; 
+sudo apt-get install build-essential python-dev python-smbus git
+Next, clone the Adafruit git folder for the library by running;
+git clone https://github.com/adafruit/Adafruit_Python_ADS1x15.git
+Change into the cloned file’s directory and run the setup file;
+cd Adafruit_Python_ADS1x1z 
+sudo python setup.py install
+
+Step 4: Test the library and 12C communication.
+cd examples
+python simpletest.py
+
+Step 5: Install Matplotlib
+sudo apt-get install python-matplotlib
+
+Step6: Install the Drawnow python module
+sudo apt-get install python-pip
+sudo pip install drawnow
+
+Python Code for Raspberry Pi Oscilloscope:
+sudo nano scope.py
+
+Code:
+import time
+import matplotlib.pyplot as plt
+#import numpy
+from drawnow import *
+# Import the ADS1x15 module.
+import Adafruit_ADS1x15
+# Create an ADS1115 ADC (16-bit) instance.
+adc = Adafruit_ADS1x15.ADS1115()
+GAIN = 1
+val = [ ]
+cnt = 0
+plt.ion()
+# Start continuous ADC conversions on channel 0 using the previous gain value.
+adc.start_adc(0, gain=GAIN)
+print('Reading ADS1x15 channel 0')
+#create the figure function
+def makeFig():
+	plt.ylim(-5000,5000)
+	plt.title('Osciloscope')
+	plt.grid(True)
+	plt.ylabel('ADC outputs')
+	plt.plot(val, 'ro-', label='Channel 0')
+	plt.legend(loc='lower right')
+while (True):
+	# Read the last ADC conversion value and print it out.
+	value = adc.get_last_result()
+	print('Channel 0: {0}'.format(value))
+	# Sleep for half a second.
+	time.sleep(0.5)
+	val.append(int(value))
+	drawnow(makeFig)
+	plt.pause(.000001)
+	cnt = cnt+1
+	if(cnt>50):
+		val.pop(0)
